@@ -1,20 +1,19 @@
 use clap::Parser;
-use miette::{IntoDiagnostic, WrapErr};
-use std::{fs, path::PathBuf};
-use std::io::Write;
 use colored::*;
+use merc::{lexer, Lexer};
+use miette::{IntoDiagnostic, WrapErr};
+use std::io::Write;
+use std::{fs, path::PathBuf};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
-//    ask for a file name directly
+    //    ask for a file name directly
     #[arg(short, long)]
     filename: Option<PathBuf>,
-
 }
 
-
-fn main() ->miette::Result<()> {
+fn main() -> miette::Result<()> {
     let args = Args::parse();
     match args.filename {
         Some(filename) => {
@@ -26,9 +25,9 @@ fn main() ->miette::Result<()> {
             for token in lexer {
                 let token = token?;
                 println!("{:?}", token);
-            };
+            }
         }
-        
+
         None => {
             print_logo();
             loop {
@@ -36,9 +35,6 @@ fn main() ->miette::Result<()> {
                 std::io::stdout().flush().unwrap();
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input).unwrap();
-
-               
-
 
                 if input.trim() == "exit" || input.trim() == "quit" {
                     println!("{}", "bye bye".bright_yellow().bold());
@@ -53,25 +49,24 @@ fn main() ->miette::Result<()> {
                     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
                     std::io::stdout().flush().unwrap();
                     print_logo();
-                    continue;   
+                    continue;
                 }
-
 
                 let lexer = Lexer::new(&input);
                 for token in lexer {
                     let token = token?;
                     println!("{}", token);
                 }
-
             }
         }
     };
     Ok(())
 }
 
-
 fn print_logo() {
-    println!("{}", r#"
+    println!(
+        "{}",
+        r#"
  ███▄ ▄███▓▓█████  ██▀███   ▄████▄  
 ▓██▒▀█▀ ██▒▓█   ▀ ▓██ ▒ ██▒▒██▀ ▀█  
 ▓██    ▓██░▒███   ▓██ ░▄█ ▒▒▓█    ▄ 
@@ -82,11 +77,17 @@ fn print_logo() {
 ░      ░      ░     ░░   ░ ░        
        ░      ░  ░   ░     ░ ░      
                            ░        
-"#.bright_cyan());
+"#
+        .bright_cyan()
+    );
 
-    println!("{}", "Welcome to the Merc Interpreter".bright_yellow().bold());
-    println!("{}", "Type 'exit' or 'quit' to leave the interpreter".italic());
+    println!(
+        "{}",
+        "Welcome to the Merc Interpreter".bright_yellow().bold()
+    );
+    println!(
+        "{}",
+        "Type 'exit' or 'quit' to leave the interpreter".italic()
+    );
     println!();
-
-    
 }
