@@ -1,0 +1,12 @@
+[package]
+name = "merc"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.19", features = ["derive"] }
+miette = { version = "7.2.0", features = ["fancy"] }
+colored = "2.0"
+indicatif = "0.17"
+rustyline = "14.0.0"
+syntect = "5.0"
