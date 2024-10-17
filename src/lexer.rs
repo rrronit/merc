@@ -3,12 +3,24 @@ use std::fmt;
 
 use miette::{miette, Error, LabeledSpan, Severity};
 
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Token {
+pub struct Token {
+    pub kind: TokenKind,
+    pub row: usize,
+    pub column: usize,
+    pub index: usize,
+}
+
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TokenKind {
     LeftParen,
     RightParen,
     LeftBrace,
     RightBrace,
+    LeftBracket,
+    RightBracket,
     Comma,
     Dot,
     Minus,
@@ -16,45 +28,37 @@ pub enum Token {
     Semicolon,
     Star,
     Slash,
-
-
     EOF,
-
-
-    // multi-character tokens
+    NewLine,
     String(String),
     Number(String),
     Identifier(String),
-
     // Comparisons 
     Equal,
+    Bang,
     BangEqual,
     EqualEqual,
     Greater,
     GreaterEqual,
     Less,
     LessEqual,
-
     // Keywords
+    Fun,
+    Let,
     And,
     Class,
+    If,
     Else,
     False,
-    Fun,
     For,
-    If,
     Nil,
     Or,
     Return,
     Super,
     This,
     True,
-    Var,
     While,
-    Print
-
-
-    
+    Block(Vec<String>),
 }
 
 pub struct Lexer<'a> {
@@ -67,50 +71,8 @@ pub struct Lexer<'a> {
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            Token::LeftParen => write!(f, "LeftParen ("),
-            Token::RightParen => write!(f, "RightParen )"),
-            Token::LeftBrace => write!(f, "LeftBrace {{ d"),
-            Token::RightBrace => write!(f, "RightBrace }} "),
-            Token::Comma => write!(f, "Comma ,"),
-            Token::Dot => write!(f, "Dot ."),
-            Token::Minus => write!(f, "Minus  -"),
-            Token::Plus => write!(f, "Plus +"),
-            Token::Semicolon => write!(f, "Semicolon ;"),
-            Token::Star => write!(f, "Star * "),
-            Token::Slash => write!(f, "Slash /"),
-            Token::EOF => write!(f, "EOF \n"),
-            Token::String(s) => write!(f, "String {s}"),
-            Token::Number(s) => write!(f, "Number {s}"),
-            Token::Identifier(s) => write!(f, "Identifier {s}"),
-            Token::Equal => write!(f, "Equal ="),
-            Token::BangEqual => write!(f, "BangEqual != "),
-            Token::EqualEqual => write!(f, "EqualEqual == "),
-            Token::Greater => write!(f, "Greater >"),
-            Token::GreaterEqual => write!(f, "GreaterEqual >= "),
-            Token::Less => write!(f, "Less <"),
-            Token::LessEqual => write!(f, "LessEqual <= "),
-            Token::And => write!(f, "And and "),
-            Token::Class => write!(f, "Class class "),
-            Token::Else => write!(f, "Else else "),
-            Token::False => write!(f, "False false "),
-            Token::Fun => write!(f, "Fun fun "),
-            Token::For => write!(f, "For for "),
-            Token::If => write!(f, "If if "),
-            Token::Nil => write!(f, "Nil nil "),
-            Token::Or => write!(f, "Or or "),
-            Token::Return => write!(f, "Return return "),
-            Token::Super => write!(f, "Super super "),
-            Token::This => write!(f, "This this "),
-            Token::True => write!(f, "True true "),
-            Token::Var => write!(f, "Var var "),
-            Token::While => write!(f, "While while "),
-            Token::Print => write!(f, "Print print "),
-
-        };
-        s
-    }   
-
+        write!(f, "Token: {:?}, row: {} col:{}", self.kind, self.row, self.column)
+    }
 }
 
 
@@ -127,12 +89,11 @@ impl<'a> Lexer<'a> {
 }
 impl<'a> Iterator for Lexer<'a> {
     type Item = Result<Token, Error>;
-    
 
     fn next(&mut self) -> Option<Self::Item> {
         let c = self.rest_input.chars().next()?;
         self.rest_input = &self.rest_input[1..];
-        
+
         self.index += 1;
 
         if c== ' '{
@@ -159,42 +120,43 @@ impl<'a> Iterator for Lexer<'a> {
             ' ' =>{
                 self.current_column += 1;
                 return self.next();
-                        },
-                        '/' =>{
-                            if self.rest_input.starts_with("/") {
-                                while let Some(c) = self.rest_input.chars().next() {
-                                    self.rest_input = &self.rest_input[1..];
-                                    self.index += 1;
-                                    if c == '\n' {
-                                        break;
-                                    }
-                                }
-                                self.current_line += 1;
-                                self.current_column = 1;
-                                return self.next();
-                            } else {
-                                Ok(Token::Slash)
-                            }
+                },
+            '/' =>{
+            if self.rest_input.starts_with("/") {
+                    while let Some(c) = self.rest_input.chars().next() {
+                        self.rest_input = &self.rest_input[1..];
+                        self.index += 1;
+                        if c == '\n' {
+                            break;
                         }
-            '(' => Ok(Token::LeftParen),
-            ')' => Ok(Token::RightParen),
-            '{' => Ok(Token::LeftBrace),
-            '}' => Ok(Token::RightBrace),
-            ',' => Ok(Token::Comma),
-            '.' => Ok(Token::Dot),
-            '-' => Ok(Token::Minus),
-            '+' => Ok(Token::Plus),
-            ';' => Ok(Token::Semicolon),
-            '*' => Ok(Token::Star),
+                    }
+                self.current_line += 1;
+                self.current_column = 1;
+                return self.next();
+                } else {
+                    Ok(Token { kind: TokenKind::Slash, row: self.current_line, column: self.current_column, index: self.index,})
+                    }
+                }
+            '(' => Ok(Token { kind: TokenKind::LeftParen, row: self.current_line, column: self.current_column, index: self.index, }),
+            ')' => Ok(Token { kind: TokenKind::RightParen, row: self.current_line, column: self.current_column, index: self.index, }),
+            '{' => Ok(Token { kind: TokenKind::LeftBrace, row: self.current_line, column: self.current_column, index: self.index, }),
+            '}' => Ok(Token { kind: TokenKind::RightBrace, row: self.current_line, column: self.current_column, index: self.index,  }),
+            '[' => Ok(Token { kind: TokenKind::LeftBracket, row: self.current_line, column: self.current_column, index: self.index,  }),
+            ']' => Ok(Token { kind: TokenKind::RightBracket, row: self.current_line, column: self.current_column, index: self.index,  }),
+            ',' => Ok(Token { kind: TokenKind::Comma, row: self.current_line, column: self.current_column, index: self.index, }),
+            '.' => Ok(Token { kind: TokenKind::Dot, row: self.current_line, column: self.current_column, index: self.index, }),
+            '-' => Ok(Token { kind: TokenKind::Minus, row: self.current_line, column: self.current_column, index: self.index, }),
+            '+' => Ok(Token { kind: TokenKind::Plus, row: self.current_line, column: self.current_column, index: self.index, }),
+            ';' => Ok(Token { kind: TokenKind::Semicolon, row: self.current_line, column: self.current_column, index: self.index,  }),
+            '*' => Ok(Token { kind: TokenKind::Star, row: self.current_line, column: self.current_column, index: self.index, }),
             '\n' | '\r' => {
                 if c == '\r' && self.rest_input.chars().next() == Some('\n') {
                     self.rest_input = &self.rest_input[1..];
                     self.index += 1;
-                    
                     }
                     self.current_line += 1;
                     self.current_column = 1;
-                    Ok(Token::EOF)
+                    Ok(Token { kind: TokenKind::NewLine, row: self.current_line, column: self.current_column, index: self.index,  })
                 
             },
             '=' => {
@@ -207,9 +169,9 @@ impl<'a> Iterator for Lexer<'a> {
                 if self.rest_input.starts_with("=") {
                     self.rest_input = &self.rest_input[1..];
                     self.index += 1;
-                    Ok(Token::EqualEqual)
+                    Ok(Token { kind: TokenKind::EqualEqual, row: self.current_line, column: self.current_column, index: self.index,  })
                 } else {
-                    Ok(Token::Equal)
+                    Ok(Token { kind: TokenKind::Equal, row: self.current_line, column: self.current_column, index: self.index, })
                 }
             },
             '!' => {
@@ -223,15 +185,9 @@ impl<'a> Iterator for Lexer<'a> {
                 if self.rest_input.starts_with("=") {
                     self.rest_input = &self.rest_input[1..];
                     self.index += 1;
-                    Ok(Token::BangEqual)
+                    Ok(Token { kind: TokenKind::BangEqual, row: self.current_line, column: self.current_column, index: self.index, })
                 } else {
-                    Err(miette! {
-                        labels = vec![LabeledSpan::at(self.index-2..self.index-10, "Expected '=' after '!'")],
-                        severity = Severity::Error,
-                        help = "Please use '!=' for not equal",
-                        "Unexpected character: at line: {:?} column: {:?} character: {:?}", self.current_line, self.current_column, c
-                    }
-                    .with_source_code(self.whole_input.to_string()))
+                    Ok(Token { kind: TokenKind::Bang, row: self.current_line, column: self.current_column, index: self.index,})
                 }
             },
             '<' => {
@@ -243,9 +199,9 @@ impl<'a> Iterator for Lexer<'a> {
                 if self.rest_input.starts_with("=") {
                     self.rest_input = &self.rest_input[1..];
                     self.index += 1;
-                    Ok(Token::LessEqual)
+                    Ok(Token { kind: TokenKind::LessEqual, row: self.current_line, column: self.current_column, index: self.index, })
                 } else {
-                    Ok(Token::Less)
+                    Ok(Token { kind: TokenKind::Less, row: self.current_line, column: self.current_column, index: self.index,})
                 }
             },
             '>' => {
@@ -258,9 +214,9 @@ impl<'a> Iterator for Lexer<'a> {
                 if self.rest_input.starts_with("=") {
                     self.rest_input = &self.rest_input[1..];
                     self.index += 1;
-                    Ok(Token::GreaterEqual)
+                    Ok(Token { kind: TokenKind::GreaterEqual, row: self.current_line, column: self.current_column, index: self.index,})
                 } else {
-                    Ok(Token::Greater)
+                    Ok(Token { kind: TokenKind::Greater, row: self.current_line, column: self.current_column, index: self.index, })
                 }
             },
 
@@ -272,7 +228,7 @@ impl<'a> Iterator for Lexer<'a> {
                     self.current_column += 1;
 
                     if c == '"' {
-                        return Some(Ok(Token::String(string)))
+                        return Some(Ok(Token { kind: TokenKind::String(string), row: self.current_line, column: self.current_column, index: self.index, }));
                     }
                     if c == '\n' {
                         self.current_line += 1;
@@ -316,7 +272,7 @@ impl<'a> Iterator for Lexer<'a> {
                 }
                 
               
-                Ok(Token::Number(number))
+                Ok(Token { kind: TokenKind::Number(number), row: self.current_line, column: self.current_column, index: self.index, })
             },
             'a'..='z' | 'A'..='Z' | '_' => {
                 let mut identifier = String::from(c);
@@ -332,31 +288,30 @@ impl<'a> Iterator for Lexer<'a> {
                 }
 
                 match identifier.as_str() {
-                    "and" => return Some(Ok(Token::And)),
-                    "class" => return Some(Ok(Token::Class)),
-                    "else" => return Some(Ok(Token::Else)),
-                    "false" => return Some(Ok(Token::False)),
-                    "fun" => return Some(Ok(Token::Fun)),
-                    "for" => return Some(Ok(Token::For)),
-                    "if" => return Some(Ok(Token::If)),
-                    "nil" => return Some(Ok(Token::Nil)),
-                    "or" => return Some(Ok(Token::Or)),
-                    "return" => return Some(Ok(Token::Return)),
-                    "super" => return Some(Ok(Token::Super)),
-                    "this" => return Some(Ok(Token::This)),
-                    "true" => return Some(Ok(Token::True)),
-                    "var" => return Some(Ok(Token::Var)),
-                    "while" => return Some(Ok(Token::While)),
-                    "print" => return Some(Ok(Token::Print)),
+                    "and" => return Some(Ok(Token{kind: TokenKind::And, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "class" => return Some(Ok(Token{kind: TokenKind::Class, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "else" => return Some(Ok(Token { kind: TokenKind::Else, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "false" => return Some(Ok(Token{kind: TokenKind::False, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "func" => return Some(Ok(Token{kind: TokenKind::Fun, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "for" => return Some(Ok(Token{kind: TokenKind::For, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "if" => return Some(Ok(Token{kind: TokenKind::If, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "nil" => return Some(Ok(Token{kind: TokenKind::Nil, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "or" => return Some(Ok(Token{kind: TokenKind::Or, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "return" => return Some(Ok(Token{kind: TokenKind::Return, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "super" => return Some(Ok(Token{kind: TokenKind::Super, row: self.current_line, column: self.current_column, index: self.index, })),
+                "this" => return Some(Ok(Token{kind: TokenKind::This, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "true" => return Some(Ok(Token{kind: TokenKind::True, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "let" => return Some(Ok(Token{kind: TokenKind::Let, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "while" => return Some(Ok(Token{kind: TokenKind::While, row: self.current_line, column: self.current_column, index: self.index, })),
                     _ => {}
                 }
 
-                Ok(Token::Identifier(identifier))
+                Ok(Token{kind: TokenKind::Identifier(identifier), row: self.current_line, column: self.current_column, index: self.index, })
             },
 
             _ => Err(miette! {
                 labels = vec![
-                    LabeledSpan::at(self.index-1..self.index, "Unexpected character" )
+                    LabeledSpan::at(self.index-2..self.index-1, "Unexpected character" )
                     ],
                     severity  = Severity::Error,
                     help = "Please use valid characters",

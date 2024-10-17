@@ -1,3 +1,6 @@
-23413fdfsdv"sfd
-sd
-df"
+let a=3
+
+
+func (a,a){
+
+}
