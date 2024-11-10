@@ -12,6 +12,14 @@ pub struct Token {
     pub index: usize,
 }
 
+impl Token {
+    pub fn to_string(&self) -> String {
+        self.kind.to_string()
+    }
+    
+}
+
+
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
@@ -59,6 +67,54 @@ pub enum TokenKind {
     True,
     While,
     Block(Vec<String>),
+}
+impl TokenKind {
+    pub fn to_string(&self) -> String {
+        match self {
+            TokenKind::LeftParen => "LeftParen".to_string(),
+            TokenKind::RightParen => "RightParen".to_string(),
+            TokenKind::LeftBrace => "LeftBrace".to_string(),
+            TokenKind::RightBrace => "RightBrace".to_string(),
+            TokenKind::LeftBracket => "LeftBracket".to_string(),
+            TokenKind::RightBracket => "RightBracket".to_string(),
+            TokenKind::Comma => "Comma".to_string(),
+            TokenKind::Dot => "Dot".to_string(),
+            TokenKind::Minus => "Minus".to_string(),
+            TokenKind::Plus => "Plus".to_string(),
+            TokenKind::Semicolon => "Semicolon".to_string(),
+            TokenKind::Star => "Star".to_string(),
+            TokenKind::Slash => "Slash".to_string(),
+            TokenKind::EOF => "EOF".to_string(),
+            TokenKind::NewLine => "NewLine".to_string(),
+            TokenKind::String(s) => format!("String({})", s),
+            TokenKind::Number(n) => format!("Number({})", n),
+            TokenKind::Identifier(s) => s.to_string(),
+            TokenKind::Equal => "Equal".to_string(),
+            TokenKind::Bang => "Bang".to_string(),
+            TokenKind::BangEqual => "BangEqual".to_string(),
+            TokenKind::EqualEqual => "EqualEqual".to_string(),
+            TokenKind::Greater => "Greater".to_string(),
+            TokenKind::GreaterEqual => "GreaterEqual".to_string(),
+            TokenKind::Less => "Less".to_string(),
+            TokenKind::LessEqual => "LessEqual".to_string(),
+            TokenKind::Fun => "Fun".to_string(),
+            TokenKind::Let => "Let".to_string(),
+            TokenKind::And => "And".to_string(),
+            TokenKind::Class => "Class".to_string(),
+            TokenKind::If => "If".to_string(),
+            TokenKind::Else => "Else".to_string(),
+            TokenKind::False => "False".to_string(),
+            TokenKind::For => "For".to_string(),
+            TokenKind::Nil => "Nil".to_string(),
+            TokenKind::Or => "Or".to_string(),
+            TokenKind::Return => "Return".to_string(),
+            TokenKind::Super => "Super".to_string(),
+            TokenKind::This => "This".to_string(),
+            TokenKind::True => "True".to_string(),
+            TokenKind::While => "While".to_string(),
+            TokenKind::Block(s) => format!("Block({:?})", s)
+        }
+    }
 }
 
 pub struct Lexer<'a> {
@@ -299,7 +355,7 @@ impl<'a> Iterator for Lexer<'a> {
                     "or" => return Some(Ok(Token{kind: TokenKind::Or, row: self.current_line, column: self.current_column, index: self.index, })),
                     "return" => return Some(Ok(Token{kind: TokenKind::Return, row: self.current_line, column: self.current_column, index: self.index, })),
                     "super" => return Some(Ok(Token{kind: TokenKind::Super, row: self.current_line, column: self.current_column, index: self.index, })),
-                "this" => return Some(Ok(Token{kind: TokenKind::This, row: self.current_line, column: self.current_column, index: self.index, })),
+                    "this" => return Some(Ok(Token{kind: TokenKind::This, row: self.current_line, column: self.current_column, index: self.index, })),
                     "true" => return Some(Ok(Token{kind: TokenKind::True, row: self.current_line, column: self.current_column, index: self.index, })),
                     "let" => return Some(Ok(Token{kind: TokenKind::Let, row: self.current_line, column: self.current_column, index: self.index, })),
                     "while" => return Some(Ok(Token{kind: TokenKind::While, row: self.current_line, column: self.current_column, index: self.index, })),

@@ -40,16 +40,38 @@ pub enum S {
     },
 }
 
+impl S {
+    pub fn to_string(&self) -> String {
+        match self {
+            S::Atom(token) => token.kind.to_string(),
+            S::Cons(token, args) => {
+                let args = args.iter().map(|arg| arg.to_string()).collect::<Vec<_>>();
+                format!("{:?} {:?}", token, args)
+            }
+            S::BinaryExpr { op, lhs, rhs } => format!("{:?} {:?} {:?}", op, lhs, rhs),
+            S::IfExpr {
+                cond,
+                then_branch,
+                else_branch,
+            } => format!("if {:?} {:?} {:?}", cond, then_branch, else_branch),
+            S::Block(block) => format!("{:?}", block),
+            S::FunDef { name, args, body } => format!("def {:?} {:?} {:?}", name, args, body),
+            S::FunCall { name, args } => format!("call {:?} {:?}", name, args),
+        }
+    }
+}
+
+
 pub struct Parser<'a> {
-    _whole_input: String,
     lexer: Peekable<Lexer<'a>>,
+    _whole_input: &'a str,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
-            _whole_input: input.to_string(),
             lexer: Lexer::new(input).peekable(),
+            _whole_input: input,
         }
     }
 
@@ -81,7 +103,7 @@ impl<'a> Parser<'a> {
                             labels = vec![LabeledSpan::at(e.index-2..e.index, format!("Expected Identifier, got {:?}", e.kind))],
                             help = format!("use"),
                             "Expected Identifier, got {:?}", e.kind,
-                        }.with_source_code(self._whole_input.clone())));
+                        }.with_source_code(self._whole_input.to_string())));
                     }
 
                     let name = self.eat_token().unwrap().unwrap();
@@ -93,7 +115,7 @@ impl<'a> Parser<'a> {
                             labels = vec![LabeledSpan::at(equal.index-2..equal.index, format!("Expected Equal, got {:?}", equal.kind))],
                             help = format!("use"),
                             "Expected Equal, got {:?}", equal.kind,
-                        }.with_source_code(self._whole_input.clone())));
+                        }.with_source_code(self._whole_input.to_string())));
                     }
 
                     self.eat_token();
@@ -130,9 +152,9 @@ impl<'a> Parser<'a> {
                 }
                 Token {
                     kind: TokenKind::LeftBrace,
-                    row,
-                    column,
-                    index,
+                    row: _,
+                    column: _,
+                    index: _,
                 } => {
                     let block = self.parse_block().unwrap();
                     return Some(Ok(S::Block(block)));
@@ -140,18 +162,18 @@ impl<'a> Parser<'a> {
 
                 Token {
                     kind: TokenKind::Fun,
-                    row,
-                    column,
-                    index,
+                    row: _,
+                    column: _,
+                    index: _,
                 } => {
                     return self.parse_function_definition();
                 }
 
                 Token {
                     kind: TokenKind::If,
-                    row,
-                    column,
-                    index,
+                    row: _,
+                    column: _,
+                    index: _,
                 } => {
                     return self.parse_if_expression();
                 }
@@ -220,7 +242,7 @@ impl<'a> Parser<'a> {
                         "Unexpected token: {:?}",
                         token.kind
                     )
-                    .with_source_code(self._whole_input.clone())));
+                    .with_source_code(self._whole_input.to_string())));
                 }
             }
         };
@@ -498,7 +520,7 @@ impl<'a> Parser<'a> {
             labels = vec![LabeledSpan::at(e.index-2..e.index, format!("Expected Identifier, got {:?}", e.kind))],
             help = format!("use"),
             "Expected Identifier, got {:?}", e.kind,
-        }.with_source_code(self._whole_input.clone())));
+        }.with_source_code(self._whole_input.to_string())));
         }
 
         let name = self.eat_token().unwrap().unwrap();
