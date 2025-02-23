@@ -103,20 +103,3 @@ let greeting = "Hello, " + "world!";
 let is_true = true && false;
 let is_false = true || false;
 ```
-
-### Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you find any bugs or have suggestions for improvements.
-
-### License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### Acknowledgments
-
-- Thanks to the Rust community for providing excellent resources and libraries.
-- Inspired by the simplicity of Lisp and other interpreted languages.
-
----
-
-Enjoy coding with Merc! 🚀
