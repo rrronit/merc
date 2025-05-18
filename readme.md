@@ -17,7 +17,7 @@ Merc is a simple interpreter for a dynamically-typed programming language. It su
 
 Here is an example script that you can run with the interpreter:
 
-```merc
+```lua
 let x = 10;
 let y = 20;
 
@@ -50,7 +50,7 @@ while x > 0 {
 
 #### Variables
 
-```merc
+```lua
 let x = 10;
 let y = "Hello, world!";
 ```
@@ -65,7 +65,7 @@ func add(a, b) {
 
 #### Conditionals
 
-```merc
+```lua
 if x > 10 {
     print("x is greater than 10");
 } else {
@@ -75,7 +75,7 @@ if x > 10 {
 
 #### Loops
 
-```merc
+```lua
 while x > 0 {
     print(x);
     x = x - 1;
@@ -84,7 +84,7 @@ while x > 0 {
 
 #### Arithmetic
 
-```merc
+```lua
 let sum = 1 + 2 * 3;
 let difference = 10 - 5;
 let product = 4 * 5;
@@ -93,13 +93,13 @@ let quotient = 20 / 4;
 
 #### String Concatenation
 
-```merc
+```lua
 let greeting = "Hello, " + "world!";
 ```
 
 #### Boolean Operations
 
-```merc
+```lua
 let is_true = true && false;
 let is_false = true || false;
 ```
